@@ -65,6 +65,21 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'Bhāva Cloud', time: new Date().toISOString() });
 });
 
+// ── Debug: show all env vars relevant to DB (safe — masks password) ───────────
+app.get('/debug/env', (req, res) => {
+  const mask = v => v ? v.slice(0,4) + '****' : '(not set)';
+  res.json({
+    BHAVA_DB_URL:  process.env.BHAVA_DB_URL  ? process.env.BHAVA_DB_URL.replace(/:([^@]+)@/, ':****@') : '(not set)',
+    PGHOST:        process.env.PGHOST        || '(not set)',
+    PGPORT:        process.env.PGPORT        || '(not set)',
+    PGUSER:        process.env.PGUSER        || '(not set)',
+    PGPASSWORD:    mask(process.env.PGPASSWORD),
+    PGDATABASE:    process.env.PGDATABASE    || '(not set)',
+    DATABASE_URL:  process.env.DATABASE_URL  ? process.env.DATABASE_URL.replace(/:([^@]+)@/, ':****@') : '(not set)',
+    NODE_ENV:      process.env.NODE_ENV      || '(not set)',
+  });
+});
+
 // ── Google OAuth ──────────────────────────────────────────────────────────────
 app.get('/auth/google', (req, res) => {
   const url = getGoogleAuthUrl();
@@ -126,7 +141,7 @@ async function start() {
       await runMigrations();
       console.log('[Bhāva Cloud] Ready.');
     } catch (err) {
-      console.error(`[Bhāva Cloud] DB connect attempt ${attempt} failed: ${err.message}`);
+      console.error(`[Bhāva Cloud] DB connect attempt ${attempt} failed: ${err.message || JSON.stringify(err)}`);
       setTimeout(() => connectWithRetry(attempt + 1), 10000);
     }
   }

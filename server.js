@@ -141,7 +141,7 @@ async function start() {
       await runMigrations();
       console.log('[Bhāva Cloud] Ready.');
     } catch (err) {
-      console.error(`[Bhāva Cloud] DB connect attempt ${attempt} failed: ${err.message}`);
+      console.error(`[Bhāva Cloud] DB connect attempt ${attempt} failed: ${err.message || JSON.stringify(err)}`);
       setTimeout(() => connectWithRetry(attempt + 1), 10000);
     }
   }
