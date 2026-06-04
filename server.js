@@ -121,6 +121,10 @@ app.use('/sync',      routesSync);
 app.use('/dashboard', routesDashboard);
 app.use('/admin',     routesAdmin);
 
+// -- Static files (teacher dashboard HTML) --
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
