@@ -20,6 +20,44 @@ router.use((req, res, next) => {
   next();
 });
 
+// ── POST /admin/school ────────────────────────────────────────────────────────
+// Add or update a school.
+// Body: { id, name, city, state }
+router.post('/school', async (req, res) => {
+  try {
+    const { id, name, city, state } = req.body;
+    if (!id || !name) {
+      return res.status(400).json({ error: 'id and name are required.' });
+    }
+    const { rows } = await query(`
+      INSERT INTO schools (id, name, city, state)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (id) DO UPDATE SET
+        name  = EXCLUDED.name,
+        city  = EXCLUDED.city,
+        state = EXCLUDED.state
+      RETURNING *
+    `, [id.toUpperCase(), name, city || '', state || '']);
+    return res.json({ ok: true, school: rows[0] });
+  } catch (err) {
+    console.error('[admin/school]', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /admin/schools ─────────────────────────────────────────────────────────
+// List all schools.
+router.get('/schools', async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT id, name, city, state, created_at FROM schools ORDER BY created_at DESC`
+    );
+    return res.json(rows);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // ── POST /admin/teacher ───────────────────────────────────────────────────────
 // Add a new teacher.
 // Body: { google_email, name, school_id, class, section }
