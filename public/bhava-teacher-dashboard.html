@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bhāva — Teacher Dashboard</title>
+  <meta name="bhava-cloud-url" content="https://bhava-cloud.onrender.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #F4F6F8;
+      color: #1a2b30;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ─── Tokens ─── */
+    :root {
+      --teal: #1B4F5A;
+      --teal-mid: #256070;
+      --teal-light: #e6f0f2;
+      --teal-faint: #f0f7f8;
+      --amber: #F5A623;
+      --amber-light: #FFF3DC;
+      --amber-dark: #c4831c;
+      --white: #ffffff;
+      --gray-bg: #F4F6F8;
+      --gray-border: #DDE3E7;
+      --gray-muted: #7a8f97;
+      --gray-faint: #c2ced4;
+      --text: #1a2b30;
+      --text-muted: #5a7079;
+      --success: #2d8a60;
+      --error: #c0392b;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 2px 8px rgba(27,79,90,0.08), 0 1px 3px rgba(27,79,90,0.05);
+      --shadow-md: 0 4px 16px rgba(27,79,90,0.12), 0 2px 6px rgba(27,79,90,0.06);
+      /* Level colors */
+      --lvl-nn: #c0392b;      /* Needs Nurturing 60-79 */
+      --lvl-gr: #e67e22;      /* Growing 80-94 */
+      --lvl-dw: #2980b9;      /* Developing Well 95-109 */
+      --lvl-th: #27ae60;      /* Thriving 110-124 */
+      --lvl-ex: #8e44ad;      /* Exceptional 125-160 */
+    }
+
+    /* ─── Shimmer skeleton ─── */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #e0e8eb 25%, #f0f5f7 50%, #e0e8eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: 6px;
+    }
+
+    /* ─── Layout ─── */
+    .header {
+      background: var(--teal);
+      color: white;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .header-subtitle {
+      font-size: 0.72rem;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-top: 1px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .conn-indicator {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+    .conn-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #aaa;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .conn-dot.connected { background: #2ecc71; box-shadow: 0 0 6px rgba(46,204,113,0.7); }
+    .conn-dot.disconnected { background: #e74c3c; box-shadow: 0 0 6px rgba(231,76,60,0.5); }
+    .btn-ghost {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: var(--radius-sm);
+      padding: 6px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.2); }
+
+    .main { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
+
+    /* ─── Privacy banner ─── */
+    .privacy-banner {
+      background: var(--amber-light);
+      border: 1.5px solid var(--amber);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .privacy-banner.hidden { display: none; }
+    .privacy-icon { font-size: 1.15rem; flex-shrink: 0; margin-top: 1px; }
+    .privacy-text { font-size: 0.84rem; color: #7a4d00; line-height: 1.55; flex: 1; }
+    .privacy-dismiss {
+      background: none; border: none; cursor: pointer;
+      color: var(--amber-dark); font-size: 1.1rem; padding: 0 0 0 8px;
+      line-height: 1; flex-shrink: 0; margin-top: 1px;
+      transition: opacity 0.2s;
+    }
+    .privacy-dismiss:hover { opacity: 0.7; }
+
+    /* ─── Server Setup Card ─── */
+    .setup-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 36px 32px;
+      max-width: 480px;
+      margin: 60px auto;
+      text-align: center;
+    }
+    .setup-card h2 { font-size: 1.25rem; font-weight: 700; color: var(--teal); margin-bottom: 6px; }
+    .setup-card p { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 24px; }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .input-ip {
+      flex: 1;
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-ip:focus { border-color: var(--teal); }
+    .btn-primary {
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: var(--teal-mid); }
+    .btn-primary:active { transform: scale(0.98); }
+    .setup-error {
+      margin-top: 14px;
+      color: var(--error);
+      font-size: 0.82rem;
+      display: none;
+    }
+
+    /* ─── Dashboard area ─── */
+    #dashboard-area { display: none; }
+    #dashboard-area.visible { display: block; }
+
+    /* ─── Class Selector Bar ─── */
+    .selector-bar {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .selector-label { font-size: 0.82rem; font-weight: 600; color: var(--teal); white-space: nowrap; }
+    .select-class {
+      border: 1.5px solid var(--gray-border);
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      background: white;
+      outline: none;
+      cursor: pointer;
+      min-width: 240px;
+      transition: border-color 0.2s;
+    }
+    .select-class:focus { border-color: var(--teal); }
+    .refresh-btn {
+      margin-left: auto;
+      background: var(--teal-faint);
+      color: var(--teal);
+      border: 1.5px solid var(--teal-light);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .refresh-btn:hover { background: var(--teal-light); }
+    .last-updated {
+      font-size: 0.75rem;
+      color: var(--gray-muted);
+      white-space: nowrap;
+    }
+
+    /* ─── Section header ─── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 14px;
+    }
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+    .section-badge {
+      background: var(--teal-light);
+      color: var(--teal);
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 2px 10px;
+    }
+
+    /* ─── Snapshot Cards ─── */
+    .snapshot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .snapshot-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .snapshot-grid { grid-template-columns: 1fr; } }
+    .metric-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 4px solid var(--teal);
+      transition: box-shadow 0.2s;
+    }
+    .metric-card:hover { box-shadow: var(--shadow-md); }
+    .metric-card.iq-card { border-top-color: #2980b9; }
+    .metric-card.eq-card { border-top-color: #27ae60; }
+    .metric-card.sq-card { border-top-color: #8e44ad; }
+    .metric-card.combined-card { border-top-color: var(--amber); }
+    .metric-label { font-size: 0.73rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .metric-value {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .level-badge {
+      display: inline-block;
+      font-size: 0.71rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-top: 2px;
+      width: fit-content;
+    }
+    .level-nn { background: #fdecea; color: var(--lvl-nn); }
+    .level-gr { background: #fef3e7; color: var(--lvl-gr); }
+    .level-dw { background: #e8f2fb; color: var(--lvl-dw); }
+    .level-th { background: #e8f9f1; color: var(--lvl-th); }
+    .level-ex { background: #f4eaf9; color: var(--lvl-ex); }
+
+    /* ─── Charts area ─── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 860px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 14px;
+    }
+    .chart-card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--teal);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .chart-canvas-wrap { position: relative; height: 165px; }
+
+    /* ─── Student Cards Grid ─── */
+    .students-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+    .student-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      border-left: 4px solid var(--gray-border);
+      transition: box-shadow 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .student-card:hover { box-shadow: var(--shadow-md); }
+    .student-card.attention { border-left-color: var(--lvl-nn); }
+    .student-card.growing { border-left-color: var(--lvl-gr); }
+    .student-card.developing { border-left-color: var(--lvl-dw); }
+    .student-card.thriving { border-left-color: var(--lvl-th); }
+    .student-card.exceptional { border-left-color: var(--lvl-ex); }
+    .student-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .student-roll { font-size: 0.73rem; color: var(--gray-muted); margin-top: -6px; }
+    .scores-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .score-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-variant-numeric: tabular-nums;
+    }
+    .score-iq { background: #e8f2fb; color: #2980b9; }
+    .score-eq { background: #e8f9f1; color: #27ae60; }
+    .score-sq { background: #f4eaf9; color: #8e44ad; }
+    .strength-row { font-size: 0.78rem; color: var(--text-muted); }
+    .strength-row strong { color: var(--text); }
+    .tip-box {
+      background: var(--teal-faint);
+      border-left: 3px solid var(--teal-light);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 12px;
+      font-size: 0.77rem;
+      color: #2a4d57;
+      line-height: 1.55;
+    }
+
+    /* ─── Focus List ─── */
+    .focus-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .focus-toggle {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--teal);
+      transition: background 0.15s;
+    }
+    .focus-toggle:hover { background: var(--teal-faint); }
+    .focus-toggle-left { display: flex; align-items: center; gap: 10px; }
+    .focus-count {
+      background: var(--teal);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 2px 9px;
+    }
+    .focus-chevron { font-size: 0.85rem; color: var(--gray-muted); transition: transform 0.2s; }
+    .focus-toggle[aria-expanded="true"] .focus-chevron { transform: rotate(180deg); }
+    .focus-body { border-top: 1px solid var(--gray-border); }
+    .focus-body.collapsed { display: none; }
+    .focus-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--gray-border);
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .focus-item:last-child { border-bottom: none; }
+    @media (max-width: 640px) { .focus-item { grid-template-columns: 1fr; } }
+    .focus-student-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .focus-score { font-size: 0.77rem; color: var(--gray-muted); margin-top: 3px; }
+    .focus-progress {
+      margin-top: 6px;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--gray-border);
+      overflow: hidden;
+      max-width: 180px;
+    }
+    .focus-progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    .focus-tip {
+      font-size: 0.77rem;
+      color: #2a4d57;
+      background: var(--teal-faint);
+      border-left: 3px solid var(--teal-light);
+      border-radius: 0 6px 6px 0;
+      padding: 9px 12px;
+      line-height: 1.55;
+    }
+    .focus-empty { padding: 20px; text-align: center; color: var(--gray-muted); font-size: 0.84rem; }
+
+    /* ─── Domain Teaching Tips ─── */
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 14px;
+    }
+    .domain-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      border-top: 4px solid var(--teal);
+    }
+    .domain-card.math { border-top-color: #2980b9; }
+    .domain-card.english { border-top-color: #27ae60; }
+    .domain-card.science { border-top-color: #8e44ad; }
+    .domain-card.artpe { border-top-color: var(--amber); }
+    .domain-card-subj {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .domain-icon { font-size: 1.3rem; }
+    .domain-subj-name { font-size: 0.85rem; font-weight: 700; color: var(--teal); }
+    .domain-tag {
+      font-size: 0.68rem; font-weight: 600; padding: 2px 8px;
+      border-radius: 20px; margin-left: auto;
+    }
+    .domain-tip-text { font-size: 0.81rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ─── Loading / Error states ─── */
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--teal);
+    }
+    .spinner-ring {
+      width: 36px; height: 36px;
+      border: 3px solid var(--teal-light);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg {
+      background: #fdecea;
+      color: var(--error);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+    .no-data {
+      background: var(--teal-faint);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .no-data-icon { font-size: 2rem; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="header">
+  <div class="header-brand">
+    <!-- SVG Logo: stylized 'B' with a leaf/wave — calm, thoughtful -->
+    <svg class="header-logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bhāva logo">
+      <circle cx="18" cy="18" r="17" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <!-- Stylized wave/growth mark -->
+      <path d="M10 24 C10 24 13 14 18 18 C23 22 26 12 26 12" stroke="#F5A623" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <circle cx="10" cy="24" r="2" fill="#F5A623"/>
+      <circle cx="26" cy="12" r="2" fill="#F5A623"/>
+    </svg>
+    <div>
+      <div class="header-title">Bhāva</div>
+      <div class="header-subtitle">Teacher Intelligence Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="conn-indicator">
+      <span class="conn-dot" id="connDot"></span>
+      <span id="connLabel">Not connected</span>
+    </div>
+    <span id="teacherName" style="font-size:0.85rem;font-weight:500;opacity:0.9;"></span>
+    <button class="btn-ghost" onclick="logOut()">Sign Out</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── Privacy Banner ── -->
+  <div class="privacy-banner" id="privacyBanner">
+    <span class="privacy-icon">⚠️</span>
+    <p class="privacy-text">
+      <strong>For your professional guidance only.</strong>
+      This dashboard is for your personal use as an educator. Please do not compare or share student scores with others, including students or their families. Each child is on their own unique journey.
+    </p>
+    <button class="privacy-dismiss" onclick="dismissPrivacy()" title="Dismiss">✕</button>
+  </div>
+
+  <!-- ── Login ── -->
+  <div id="setupArea">
+    <div class="setup-card">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:56px;height:56px;margin:0 auto 18px;" aria-hidden="true">
+        <rect x="6" y="14" width="36" height="24" rx="4" fill="#e6f0f2" stroke="#1B4F5A" stroke-width="2"/>
+        <rect x="6" y="14" width="36" height="8" rx="4" fill="#1B4F5A"/>
+        <circle cx="12" cy="18" r="1.5" fill="#F5A623"/>
+        <circle cx="17" cy="18" r="1.5" fill="rgba(255,255,255,0.5)"/>
+        <line x1="24" y1="26" x2="38" y2="26" stroke="#1B4F5A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="24" y1="30" x2="34" y2="30" stroke="#c2ced4" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <h2>Bhāva Teacher Dashboard</h2>
+      <p>Sign in with your Google account to view your class data. Your account must be registered with Bhāva Tech.</p>
+      <div class="input-row" style="justify-content:center;margin-top:24px;">
+        <button class="btn-primary" onclick="signInWithGoogle()" style="display:flex;align-items:center;gap:10px;padding:12px 28px;font-size:1rem;">
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33.3 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.5 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.5 35.5 26.9 36 24 36c-5.2 0-9.7-2.7-11.3-6.8l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.7l6.2 5.2C41 35.5 44 30.1 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+          Sign in with Google
+        </button>
+      </div>
+      <div class="setup-error" id="setupError" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ── Dashboard ── -->
+  <div id="dashboard-area">
+
+    <!-- Class Selector Bar -->
+    <div class="selector-bar">
+      <span class="selector-label">Class</span>
+      <select class="select-class" id="classSelect" onchange="loadClassData()">
+        <option value="">Loading classes…</option>
+      </select>
+      <button class="refresh-btn" onclick="refreshData()">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.5 0 2.87.6 3.87 1.57"/><path d="M14 2v4h-4"/></svg>
+        Refresh
+      </button>
+      <span class="last-updated" id="lastUpdated"></span>
+    </div>
+
+    <!-- 2. Class Snapshot -->
+    <div class="section-header">
+      <h2>Class Snapshot</h2>
+      <span class="section-badge" id="classBadge">—</span>
+    </div>
+    <div class="snapshot-grid" id="snapshotGrid">
+      <!-- Skeleton -->
+      <div class="metric-card iq-card"><div class="metric-label">Average IQ</div><div class="skeleton" style="height:2.1rem;width:70%;margin-top:6px;"></div><div class="skeleton" style="height:1rem;width:50%;margin-top:10px;"></div></div>
+      <div class="metric-card eq-card"><div class="metric-label">Average EQ</div><div class="skeleton" style="height:2.1rem;width:70%;margin-top:6px;"></div><div class="skeleton" style="height:1rem;width:50%;margin-top:10px;"></div></div>
+      <div class="metric-card sq-card"><div class="metric-label">Average SQ</div><div class="skeleton" style="height:2.1rem;width:70%;margin-top:6px;"></div><div class="skeleton" style="height:1rem;width:50%;margin-top:10px;"></div></div>
+      <div class="metric-card combined-card"><div class="metric-label">Average Combined</div><div class="skeleton" style="height:2.1rem;width:70%;margin-top:6px;"></div><div class="skeleton" style="height:1rem;width:50%;margin-top:10px;"></div></div>
+    </div>
+
+    <!-- Sub-score charts -->
+    <div class="charts-row" id="chartsRow">
+      <div class="chart-card">
+        <div class="chart-card-title">IQ Breakdown</div>
+        <div class="chart-canvas-wrap"><canvas id="iqChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">EQ Breakdown</div>
+        <div class="chart-canvas-wrap"><canvas id="eqChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">SQ Breakdown</div>
+        <div class="chart-canvas-wrap"><canvas id="sqChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 3. Student Cards -->
+    <div class="section-header">
+      <h2>Student Overview</h2>
+      <span class="section-badge" id="studentCountBadge">—</span>
+    </div>
+    <div id="studentsContainer">
+      <div class="loading-spinner"><div class="spinner-ring"></div></div>
+    </div>
+
+    <!-- 4. Focus List -->
+    <div class="section-header">
+      <h2>Domain Focus List</h2>
+      <span class="section-badge">Below Developing Well (&lt;95)</span>
+    </div>
+    <div id="focusContainer">
+      <div class="loading-spinner"><div class="spinner-ring"></div></div>
+    </div>
+
+    <!-- 5. Domain Teaching Tips -->
+    <div class="section-header">
+      <h2>Class-Level Teaching Tips</h2>
+      <span class="section-badge">By Subject</span>
+    </div>
+    <div class="domain-grid">
+      <div class="domain-card math">
+        <div class="domain-card-subj">
+          <span class="domain-icon">🔢</span>
+          <span class="domain-subj-name">Mathematics</span>
+          <span class="domain-tag level-dw">IQ Focus</span>
+        </div>
+        <p class="domain-tip-text">Start each Maths lesson with a 2-minute warm-up puzzle — patterns, sequences, or number games. This wakes up logical thinking for the whole class without adding to your preparation time.</p>
+      </div>
+      <div class="domain-card english">
+        <div class="domain-card-subj">
+          <span class="domain-icon">📖</span>
+          <span class="domain-subj-name">English / Language</span>
+          <span class="domain-tag level-th">EQ Focus</span>
+        </div>
+        <p class="domain-tip-text">Use "story feelings" discussions: ask students how a character felt and why. This naturally develops empathy and expressive communication. One question per lesson is enough — no extra planning needed.</p>
+      </div>
+      <div class="domain-card science">
+        <div class="domain-card-subj">
+          <span class="domain-icon">🔬</span>
+          <span class="domain-subj-name">Science</span>
+          <span class="domain-tag level-ex">SQ + IQ</span>
+        </div>
+        <p class="domain-tip-text">Group experiments work best when roles are assigned — observer, recorder, presenter. Rotating roles across sessions builds leadership, cooperation, and logical thinking simultaneously.</p>
+      </div>
+      <div class="domain-card artpe">
+        <div class="domain-card-subj">
+          <span class="domain-icon">🎨</span>
+          <span class="domain-subj-name">Art &amp; Physical Education</span>
+          <span class="domain-tag level-gr">EQ + SQ</span>
+        </div>
+        <p class="domain-tip-text">Creative and physical activities are natural EQ and SQ builders. Let students design their own rules for a game or activity — it builds social awareness, conflict resolution, and confidence organically.</p>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-area -->
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  BHĀVA TEACHER DASHBOARD — Core Application
+// ═══════════════════════════════════════════════════════
+
+// ── Config ──
+const CLOUD_URL = 'https://bhava-cloud.onrender.com';
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// ── State ──
+let jwtToken = localStorage.getItem('bhava_jwt') || '';
+let teacherProfile = null;
+let refreshTimer = null;
+let chartInstances = {};
+let currentClassId = null;
+
+// ── Handle Google OAuth redirect (token arrives in URL hash) ──
+(function handleOAuthRedirect() {
+  const hash = window.location.hash;
+  const params = new URLSearchParams(window.location.search);
+
+  if (hash && hash.includes('token=')) {
+    const token = decodeURIComponent(hash.split('token=')[1]);
+    localStorage.setItem('bhava_jwt', token);
+    jwtToken = token;
+    // Clean URL
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  const authError = params.get('auth_error');
+  if (authError) {
+    const errEl = document.getElementById('setupError');
+    if (errEl) { errEl.textContent = decodeURIComponent(authError); errEl.style.display = 'block'; }
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+
+// ── Score label helpers ──
+function getLevel(score) {
+  if (score < 80)  return { label: 'Needs Nurturing', cls: 'nn' };
+  if (score < 95)  return { label: 'Growing',         cls: 'gr' };
+  if (score < 110) return { label: 'Developing Well', cls: 'dw' };
+  if (score < 125) return { label: 'Thriving',        cls: 'th' };
+  return             { label: 'Exceptional',          cls: 'ex' };
+}
+
+function levelBadgeHTML(score) {
+  const { label, cls } = getLevel(score);
+  return `<span class="level-badge level-${cls}">${label}</span>`;
+}
+
+function scoreBadgeColor(score) {
+  if (score < 80)  return '#fdecea';
+  if (score < 95)  return '#fef3e7';
+  if (score < 110) return '#e8f2fb';
+  if (score < 125) return '#e8f9f1';
+  return '#f4eaf9';
+}
+
+function scoreTextColor(score) {
+  if (score < 80)  return '#c0392b';
+  if (score < 95)  return '#e67e22';
+  if (score < 110) return '#2980b9';
+  if (score < 125) return '#27ae60';
+  return '#8e44ad';
+}
+
+function progressColor(score) {
+  if (score < 80)  return '#e74c3c';
+  if (score < 95)  return '#e67e22';
+  if (score < 110) return '#3498db';
+  if (score < 125) return '#2ecc71';
+  return '#9b59b6';
+}
+
+// Score → 0–100% on 60–160 range
+function scoreToPercent(score) {
+  return Math.max(0, Math.min(100, ((score - 60) / 100) * 100));
+}
+
+// ── Tip generation ──
+const TIP_MAP = {
+  iq_logic:             n => `In your next Maths class, include a short pattern-finding puzzle for ${n} — even 3 minutes helps build logical sequencing naturally.`,
+  iq_memory:            n => `In Science or English, ask ${n} to recall yesterday's key terms before the lesson — spaced recall strengthens memory naturally.`,
+  iq_attention:         n => `Seat ${n} away from distractions during focused tasks. Give them a clear single-step instruction at a time — this helps enormously.`,
+  iq_processing_speed:  n => `During timed tasks, give ${n} a few extra seconds. Speed improves naturally with practice — no pressure needed.`,
+  eq_empathy:           n => `In English class, use story-based discussions: "How do you think the character felt?" — this nurtures empathy naturally for ${n}.`,
+  eq_communication:     n => `Ask ${n} to summarize a lesson in their own words — even one sentence. This builds expressive communication over time.`,
+  eq_emotional_balance: n => `Before tests or presentations, a 1-minute breathing exercise benefits the whole class and especially helps ${n} self-regulate.`,
+  eq_confidence:        n => `Give ${n} small, achievable tasks where they can succeed visibly. Even brief public recognition builds confidence meaningfully.`,
+  eq_self_awareness:    n => `Ask the class to rate their own understanding after a lesson (1–5 fingers). This self-check habit builds self-awareness for ${n}.`,
+  sq_cooperation:       n => `In group activities, pair ${n} with a patient, collaborative peer. Joint projects in Science or Art work especially well.`,
+  sq_leadership:        n => `Assign ${n} as "group reporter" or "class helper" for small tasks — responsibility builds leadership gradually and positively.`,
+  sq_social_awareness:  n => `Use class discussions about news, stories, or events to help ${n} observe how others feel and react.`,
+  sq_conflict_resolution: n => `Role-play simple conflict scenarios in English drama or moral science — helps ${n} practice peaceful resolution in a safe setting.`,
+};
+
+function getSubScoreMap(student) {
+  return {
+    iq_logic:             student.iq_logic,
+    iq_memory:            student.iq_memory,
+    iq_attention:         student.iq_attention,
+    iq_processing_speed:  student.iq_processing_speed,
+    eq_empathy:           student.eq_empathy,
+    eq_communication:     student.eq_communication,
+    eq_emotional_balance: student.eq_emotional_balance,
+    eq_confidence:        student.eq_confidence,
+    eq_self_awareness:    student.eq_self_awareness,
+    sq_cooperation:       student.sq_cooperation,
+    sq_leadership:        student.sq_leadership,
+    sq_social_awareness:  student.sq_social_awareness,
+    sq_conflict_resolution: student.sq_conflict_resolution,
+  };
+}
+
+function getLowestSubScore(subScores) {
+  let minKey = null, minVal = Infinity;
+  for (const [k, v] of Object.entries(subScores)) {
+    if (v !== undefined && v !== null && v < minVal) { minVal = v; minKey = k; }
+  }
+  return minKey;
+}
+
+function getHighestSubScore(subScores) {
+  let maxKey = null, maxVal = -Infinity;
+  for (const [k, v] of Object.entries(subScores)) {
+    if (v !== undefined && v !== null && v > maxVal) { maxVal = v; maxKey = k; }
+  }
+  return maxKey;
+}
+
+function subScoreLabel(key) {
+  const labels = {
+    iq_logic: 'Logic', iq_memory: 'Memory', iq_attention: 'Attention',
+    iq_processing_speed: 'Processing Speed', eq_empathy: 'Empathy',
+    eq_communication: 'Communication', eq_emotional_balance: 'Emotional Balance',
+    eq_confidence: 'Confidence', eq_self_awareness: 'Self-Awareness',
+    sq_cooperation: 'Cooperation', sq_leadership: 'Leadership',
+    sq_social_awareness: 'Social Awareness', sq_conflict_resolution: 'Conflict Resolution',
+  };
+  return labels[key] || key;
+}
+
+function getTip(student) {
+  const subScores = getSubScoreMap(student);
+  const lowestKey = getLowestSubScore(subScores);
+  if (!lowestKey) return 'Observe this student across subjects for emerging strengths.';
+  const gen = TIP_MAP[lowestKey];
+  return gen ? gen(student.name) : '';
+}
+
+// ── API helpers (cloud) ──
+function apiBase() { return `${CLOUD_URL}/dashboard`; }
+
+async function apiFetch(path) {
+  const res = await fetch(apiBase() + path, {
+    headers: { 'Authorization': `Bearer ${jwtToken}` },
+    signal: AbortSignal.timeout(15000)
+  });
+  if (res.status === 401) {
+    // Token expired — force re-login
+    localStorage.removeItem('bhava_jwt');
+    jwtToken = '';
+    showSetup();
+    throw new Error('Session expired. Please sign in again.');
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── Google Sign-in ──
+function signInWithGoogle() {
+  window.location.href = `${CLOUD_URL}/auth/google`;
+}
+
+function setConnected(ok) {
+  const dot = document.getElementById('connDot');
+  const lbl = document.getElementById('connLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'conn-dot ' + (ok ? 'connected' : 'disconnected');
+  lbl.textContent = ok ? 'Connected' : 'Not connected';
+}
+
+// ── Privacy banner ──
+function dismissPrivacy() {
+  localStorage.setItem('bhava_dismissed_notice', '1');
+  document.getElementById('privacyBanner').classList.add('hidden');
+}
+
+// ── Setup / login flow ──
+function showSetup() {
+  document.getElementById('setupArea').style.display = 'block';
+  document.getElementById('dashboard-area').classList.remove('visible');
+}
+
+async function initDashboard() {
+  if (!jwtToken) { showSetup(); return; }
+  try {
+    // Verify token and get teacher profile
+    teacherProfile = await apiFetch('/me');
+    // Update header with teacher name
+    const nameEl = document.getElementById('teacherName');
+    if (nameEl) nameEl.textContent = teacherProfile.name || 'Teacher';
+    document.getElementById('setupArea').style.display = 'none';
+    document.getElementById('dashboard-area').classList.add('visible');
+    setConnected(true);
+    await loadClasses();
+    startAutoRefresh();
+  } catch (e) {
+    if (e.message && e.message.includes('401')) {
+      showSetup();
+    } else {
+      showSetup();
+    }
+  }
+}
+
+// ── Classes ──
+async function loadClasses() {
+  const sel = document.getElementById('classSelect');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    // Cloud dashboard: teacher sees only their assigned class
+    // /dashboard/me returns class+section, we fetch that class data directly
+    const data = teacherProfile
+      ? [{ class: teacherProfile.class, section: teacherProfile.section,
+           school_id: teacherProfile.school_id,
+           student_count: null }]
+      : await apiFetch('/classes').then(d => d.classes || d);
+    const classes = data;
+    sel.innerHTML = '<option value="">Select a class…</option>';
+    classes.forEach(c => {
+      const opt = document.createElement('option');
+      const id = c.id || `${c.class}-${c.section}`;
+      opt.value = id;
+      opt.dataset.class = c.class;
+      opt.dataset.section = c.section;
+      opt.dataset.schoolId = c.school_id || '';
+      const label = c.name || `Class ${c.class} – Section ${c.section}`;
+      const count = c.student_count ? ` (${c.student_count} students)` : '';
+      opt.textContent = label + count;
+      sel.appendChild(opt);
+    });
+    if (classes.length > 0) {
+      sel.selectedIndex = 1;
+      await loadClassData();
+    }
+  } catch (e) {
+    sel.innerHTML = '<option value="">Could not load classes</option>';
+    console.error(e);
+  }
+}
+
+// ── Class data ──
+async function loadClassData() {
+  const sel = document.getElementById('classSelect');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  currentClassId = opt.value;
+  await fetchAndRender();
+}
+
+async function fetchAndRender() {
+  // Cloud: /dashboard/class and /dashboard/students use teacher's JWT to filter automatically
+  showLoadingState();
+  try {
+    const [classData, studentsData] = await Promise.all([
+      apiFetch('/class'),
+      apiFetch('/students')
+    ]);
+    const students = studentsData.students || studentsData;
+    renderSnapshot(classData, students);
+    renderStudentCards(students);
+    renderFocusList(students);
+    updateLastUpdated();
+    setConnected(true);
+    document.getElementById('classBadge').textContent =
+      `${students.length} students`;
+    document.getElementById('studentCountBadge').textContent =
+      `${students.length} students`;
+  } catch (e) {
+    showFetchError(e.message);
+  }
+}
+
+function showLoadingState() {
+  document.getElementById('studentsContainer').innerHTML =
+    '<div class="loading-spinner"><div class="spinner-ring"></div></div>';
+  document.getElementById('focusContainer').innerHTML =
+    '<div class="loading-spinner"><div class="spinner-ring"></div></div>';
+}
+
+function showFetchError(msg) {
+  const errHTML = `<div class="error-msg">
+    ⚠️ Could not connect to Bhāva server — check IP and ensure the app is running. (${msg})
+  </div>`;
+  document.getElementById('studentsContainer').innerHTML = errHTML;
+  document.getElementById('focusContainer').innerHTML = errHTML;
+  setConnected(false);
+}
+
+// ── Snapshot ──
+function renderSnapshot(classData, students) {
+  // Calculate class averages from students if not in classData
+  let avgIQ = classData.avg_iq, avgEQ = classData.avg_eq,
+      avgSQ = classData.avg_sq, avgCombined = classData.avg_total || classData.avg_combined;
+
+  if (!avgIQ && students.length > 0) {
+    const validStudents = students.filter(s => s.iq_total || s.eq_total || s.sq_total);
+    if (validStudents.length > 0) {
+      avgIQ = avg(validStudents.map(s => s.iq_total).filter(Boolean));
+      avgEQ = avg(validStudents.map(s => s.eq_total).filter(Boolean));
+      avgSQ = avg(validStudents.map(s => s.sq_total).filter(Boolean));
+      avgCombined = avg(validStudents.map(s => s.combined || ((s.iq_total||0)+(s.eq_total||0)+(s.sq_total||0))/3).filter(Boolean));
+    }
+  }
+
+  document.getElementById('snapshotGrid').innerHTML = `
+    ${metricCardHTML('Average IQ', avgIQ, 'iq-card')}
+    ${metricCardHTML('Average EQ', avgEQ, 'eq-card')}
+    ${metricCardHTML('Average SQ', avgSQ, 'sq-card')}
+    ${metricCardHTML('Average Combined', avgCombined, 'combined-card')}
+  `;
+
+  // Charts: compute class averages of sub-scores
+  const iqKeys = ['iq_logic','iq_memory','iq_attention','iq_processing_speed'];
+  const eqKeys = ['eq_empathy','eq_communication','eq_emotional_balance','eq_confidence','eq_self_awareness'];
+  const sqKeys = ['sq_cooperation','sq_leadership','sq_social_awareness','sq_conflict_resolution'];
+
+  const iqVals = iqKeys.map(k => avg(students.map(s=>s[k]).filter(v=>v!=null)));
+  const eqVals = eqKeys.map(k => avg(students.map(s=>s[k]).filter(v=>v!=null)));
+  const sqVals = sqKeys.map(k => avg(students.map(s=>s[k]).filter(v=>v!=null)));
+
+  renderBarChart('iqChart', ['Logic','Memory','Attention','Processing Speed'], iqVals, '#2980b9');
+  renderBarChart('eqChart', ['Empathy','Communication','Emotional Balance','Confidence','Self-Awareness'], eqVals, '#27ae60');
+  renderBarChart('sqChart', ['Cooperation','Leadership','Social Awareness','Conflict Resolution'], sqVals, '#8e44ad');
+}
+
+function metricCardHTML(label, score, cls) {
+  if (!score && score !== 0) {
+    return `<div class="metric-card ${cls}">
+      <div class="metric-label">${label}</div>
+      <div class="metric-value" style="color:var(--gray-faint)">—</div>
+      <span class="level-badge" style="background:var(--gray-border);color:var(--gray-muted)">No data yet</span>
+    </div>`;
+  }
+  const s = Math.round(score * 10) / 10;
+  return `<div class="metric-card ${cls}">
+    <div class="metric-label">${label}</div>
+    <div class="metric-value">${s}</div>
+    ${levelBadgeHTML(s)}
+  </div>`;
+}
+
+function avg(arr) {
+  if (!arr.length) return null;
+  return arr.reduce((a,b)=>a+b,0) / arr.length;
+}
+
+// ── Charts ──
+function renderBarChart(canvasId, labels, data, color) {
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+    delete chartInstances[canvasId];
+  }
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const validData = data.map(v => v != null ? Math.round(v*10)/10 : 0);
+
+  chartInstances[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: validData,
+        backgroundColor: color + '33',
+        borderColor: color,
+        borderWidth: 1.5,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 700, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.x.toFixed(1)} — ${getLevel(ctx.parsed.x).label}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: 60, max: 160,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { font: { family: 'Poppins', size: 10 }, color: '#7a8f97' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { family: 'Poppins', size: 10 }, color: '#5a7079' }
+        }
+      }
+    }
+  });
+}
+
+// ── Student Cards ──
+function renderStudentCards(students) {
+  if (!students || students.length === 0) {
+    document.getElementById('studentsContainer').innerHTML = `
+      <div class="no-data">
+        <div class="no-data-icon">📋</div>
+        <strong>No student data yet.</strong><br>
+        Students will appear here once they have completed sessions on the Bhāva app.
+      </div>`;
+    return;
+  }
+
+  // Sort: lowest combined score first
+  const sorted = [...students].sort((a, b) => {
+    const ca = a.combined || ((a.iq_total||0)+(a.eq_total||0)+(a.sq_total||0))/3;
+    const cb = b.combined || ((b.iq_total||0)+(b.eq_total||0)+(b.sq_total||0))/3;
+    return ca - cb;
+  });
+
+  const html = sorted.map(s => studentCardHTML(s)).join('');
+  document.getElementById('studentsContainer').innerHTML =
+    `<div class="students-grid">${html}</div>`;
+}
+
+function studentCardHTML(s) {
+  const combined = s.combined || ((s.iq_total||0)+(s.eq_total||0)+(s.sq_total||0))/3;
+  const { cls } = getLevel(combined);
+  const cardCls = { nn:'attention', gr:'growing', dw:'developing', th:'thriving', ex:'exceptional' }[cls] || '';
+
+  const subScores = getSubScoreMap(s);
+  const highKey = getHighestSubScore(subScores);
+  const lowKey = getLowestSubScore(subScores);
+  const tip = getTip(s);
+
+  const hasScores = s.iq_total || s.eq_total || s.sq_total;
+
+  const scoresHTML = hasScores ? `
+    <div class="scores-row">
+      <span class="score-badge score-iq">IQ ${s.iq_total ? Math.round(s.iq_total*10)/10 : '—'}</span>
+      <span class="score-badge score-eq">EQ ${s.eq_total ? Math.round(s.eq_total*10)/10 : '—'}</span>
+      <span class="score-badge score-sq">SQ ${s.sq_total ? Math.round(s.sq_total*10)/10 : '—'}</span>
+    </div>
+    ${highKey ? `<div class="strength-row">Strength: <strong>${subScoreLabel(highKey)}</strong> &nbsp;·&nbsp; Nurture: <strong>${subScoreLabel(lowKey)}</strong></div>` : ''}
+    <div class="tip-box">${tip}</div>
+  ` : `<div class="tip-box" style="background:#f8f9fa;border-left-color:var(--gray-border);color:var(--gray-muted);">No session data yet for this student.</div>`;
+
+  return `
+    <div class="student-card ${cardCls}">
+      <div>
+        <div class="student-name">${escapeHTML(s.name)}</div>
+        <div class="student-roll">Roll No. ${escapeHTML(String(s.roll_no || s.id || '—'))}</div>
+      </div>
+      ${scoresHTML}
+    </div>`;
+}
+
+// ── Focus List ──
+function renderFocusList(students) {
+  const domains = [
+    { key: 'iq', label: 'IQ Focus', scoreField: 'iq_total', icon: '🧠', color: '#2980b9' },
+    { key: 'eq', label: 'EQ Focus', scoreField: 'eq_total', icon: '💚', color: '#27ae60' },
+    { key: 'sq', label: 'SQ Focus', scoreField: 'sq_total', icon: '🤝', color: '#8e44ad' },
+  ];
+
+  const focusHTML = domains.map((d, i) => {
+    const focused = students
+      .filter(s => s[d.scoreField] && s[d.scoreField] < 95)
+      .sort((a,b) => a[d.scoreField] - b[d.scoreField]);
+
+    const bodyHTML = focused.length === 0
+      ? `<div class="focus-empty">✓ All students are at Developing Well or above in ${d.label.replace(' Focus','')}.</div>`
+      : focused.map(s => focusItemHTML(s, d)).join('');
+
+    return `
+      <div class="focus-section">
+        <button class="focus-toggle" onclick="toggleFocus(this)" aria-expanded="${i===0}">
+          <div class="focus-toggle-left">
+            <span>${d.icon} ${d.label}</span>
+            <span class="focus-count">${focused.length}</span>
+          </div>
+          <span class="focus-chevron">▾</span>
+        </button>
+        <div class="focus-body ${i===0?'':'collapsed'}">${bodyHTML}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('focusContainer').innerHTML = focusHTML;
+}
+
+function focusItemHTML(s, domain) {
+  const score = s[domain.scoreField];
+  const { label } = getLevel(score);
+  const pct = scoreToPercent(score);
+  // Pick tip from within this domain's sub-scores for targeted advice
+  const domainKeys = {
+    iq: ['iq_logic','iq_memory','iq_attention','iq_processing_speed'],
+    eq: ['eq_empathy','eq_communication','eq_emotional_balance','eq_confidence','eq_self_awareness'],
+    sq: ['sq_cooperation','sq_leadership','sq_social_awareness','sq_conflict_resolution'],
+  };
+  const domainSubScores = {};
+  (domainKeys[domain.key] || []).forEach(k => { domainSubScores[k] = s[k]; });
+  const lowDomainKey = getLowestSubScore(domainSubScores);
+  const tip = lowDomainKey && TIP_MAP[lowDomainKey] ? TIP_MAP[lowDomainKey](s.name) : getTip(s);
+  return `
+    <div class="focus-item">
+      <div>
+        <div class="focus-student-name">${escapeHTML(s.name)}</div>
+        <div class="focus-score">${domain.key.toUpperCase()}: ${Math.round(score*10)/10} — ${label}</div>
+        <div class="focus-progress">
+          <div class="focus-progress-fill" style="width:${pct}%;background:${progressColor(score)};"></div>
+        </div>
+      </div>
+      <div class="focus-tip">${tip}</div>
+    </div>`;
+}
+
+function toggleFocus(btn) {
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', String(!expanded));
+  const body = btn.nextElementSibling;
+  body.classList.toggle('collapsed', expanded);
+}
+
+// ── Last updated ──
+function updateLastUpdated() {
+  const now = new Date();
+  const t = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('lastUpdated').textContent = `Updated ${t}`;
+}
+
+// ── Refresh ──
+async function refreshData() {
+  const sel = document.getElementById('classSelect');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  await loadClassData();
+}
+
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => { refreshData(); }, REFRESH_INTERVAL);
+}
+
+// ── Utils ──
+function escapeHTML(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MOCK DATA — for demo / offline testing
+//  Remove this section when connecting to real server
+// ═══════════════════════════════════════════════════════
+let USE_MOCK = false;
+
+function injectMock() {
+  // Intercept fetch when mock mode active
+  const origFetch = window.fetch;
+  window.fetch = async (url, opts) => {
+    if (!USE_MOCK || !url.includes(':7842/')) {
+      return origFetch(url, opts);
+    }
+    await new Promise(r => setTimeout(r, 400)); // simulate latency
+
+    if (url.includes('/api/classes')) {
+      return mockResponse({ classes: [
+        { id: '5A', class: '5', section: 'A', name: 'Class 5 – Section A', student_count: 12 },
+        { id: '6B', class: '6', section: 'B', name: 'Class 6 – Section B', student_count: 10 },
+      ]});
+    }
+
+    if (url.includes('/api/class')) {
+      return mockResponse({ avg_iq: 98.4, avg_eq: 103.7, avg_sq: 91.2, avg_combined: 97.8 });
+    }
+
+    if (url.includes('/api/students')) {
+      return mockResponse({ students: MOCK_STUDENTS });
+    }
+
+    return origFetch(url, opts);
+  };
+}
+
+function mockResponse(data) {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+const MOCK_STUDENTS = [
+  { name: 'Aanya Sharma',   roll: '01', iq_total: 78,  eq_total: 82,  sq_total: 75,  iq_logic: 72, iq_memory: 80, iq_attention: 78, iq_processing_speed: 81, eq_empathy: 88, eq_communication: 82, eq_emotional_balance: 79, eq_confidence: 80, eq_self_awareness: 84, sq_cooperation: 74, sq_leadership: 72, sq_social_awareness: 78, sq_conflict_resolution: 70 },
+  { name: 'Rohan Mehta',    roll: '02', iq_total: 112, eq_total: 108, sq_total: 115, iq_logic: 118, iq_memory: 112, iq_attention: 108, iq_processing_speed: 110, eq_empathy: 105, eq_communication: 112, eq_emotional_balance: 107, eq_confidence: 110, eq_self_awareness: 108, sq_cooperation: 118, sq_leadership: 112, sq_social_awareness: 116, sq_conflict_resolution: 113 },
+  { name: 'Priya Nair',     roll: '03', iq_total: 95,  eq_total: 91,  sq_total: 88,  iq_logic: 96, iq_memory: 94, iq_attention: 95, iq_processing_speed: 95, eq_empathy: 90, eq_communication: 89, eq_emotional_balance: 95, eq_confidence: 88, eq_self_awareness: 93, sq_cooperation: 90, sq_leadership: 84, sq_social_awareness: 88, sq_conflict_resolution: 89 },
+  { name: 'Dev Patel',      roll: '04', iq_total: 86,  eq_total: 79,  sq_total: 83,  iq_logic: 88, iq_memory: 84, iq_attention: 82, iq_processing_speed: 89, eq_empathy: 76, eq_communication: 80, eq_emotional_balance: 82, eq_confidence: 77, eq_self_awareness: 79, sq_cooperation: 84, sq_leadership: 80, sq_social_awareness: 85, sq_conflict_resolution: 82 },
+  { name: 'Kavya Reddy',    roll: '05', iq_total: 128, eq_total: 131, sq_total: 126, iq_logic: 130, iq_memory: 128, iq_attention: 126, iq_processing_speed: 127, eq_empathy: 134, eq_communication: 130, eq_emotional_balance: 129, eq_confidence: 132, eq_self_awareness: 130, sq_cooperation: 126, sq_leadership: 128, sq_social_awareness: 124, sq_conflict_resolution: 126 },
+  { name: 'Arjun Singh',    roll: '06', iq_total: 102, eq_total: 98,  sq_total: 94,  iq_logic: 100, iq_memory: 104, iq_attention: 102, iq_processing_speed: 101, eq_empathy: 99, eq_communication: 96, eq_emotional_balance: 98, eq_confidence: 100, eq_self_awareness: 97, sq_cooperation: 95, sq_leadership: 92, sq_social_awareness: 94, sq_conflict_resolution: 96 },
+  { name: 'Meera Iyer',     roll: '07', iq_total: 74,  eq_total: 88,  sq_total: 80,  iq_logic: 70, iq_memory: 76, iq_attention: 72, iq_processing_speed: 78, eq_empathy: 92, eq_communication: 88, eq_emotional_balance: 86, eq_confidence: 84, eq_self_awareness: 89, sq_cooperation: 82, sq_leadership: 78, sq_social_awareness: 80, sq_conflict_resolution: 80 },
+  { name: 'Kabir Joshi',    roll: '08', iq_total: 119, eq_total: 115, sq_total: 121, iq_logic: 122, iq_memory: 118, iq_attention: 116, iq_processing_speed: 120, eq_empathy: 116, eq_communication: 114, eq_emotional_balance: 115, eq_confidence: 117, eq_self_awareness: 113, sq_cooperation: 122, sq_leadership: 120, sq_social_awareness: 124, sq_conflict_resolution: 118 },
+  { name: 'Sana Khan',      roll: '09', iq_total: 90,  eq_total: 85,  sq_total: 92,  iq_logic: 91, iq_memory: 89, iq_attention: 88, iq_processing_speed: 92, eq_empathy: 84, eq_communication: 86, eq_emotional_balance: 88, eq_confidence: 83, eq_self_awareness: 85, sq_cooperation: 94, sq_leadership: 90, sq_social_awareness: 91, sq_conflict_resolution: 93 },
+  { name: 'Vihaan Gupta',   roll: '10', iq_total: 106, eq_total: 110, sq_total: 104, iq_logic: 108, iq_memory: 106, iq_attention: 104, iq_processing_speed: 106, eq_empathy: 112, eq_communication: 110, eq_emotional_balance: 108, eq_confidence: 111, eq_self_awareness: 109, sq_cooperation: 106, sq_leadership: 102, sq_social_awareness: 104, sq_conflict_resolution: 104 },
+  { name: 'Isha Kulkarni',  roll: '11', iq_total: 83,  eq_total: 93,  sq_total: 86,  iq_logic: 82, iq_memory: 85, iq_attention: 83, iq_processing_speed: 82, eq_empathy: 95, eq_communication: 91, eq_emotional_balance: 94, eq_confidence: 90, eq_self_awareness: 92, sq_cooperation: 88, sq_leadership: 84, sq_social_awareness: 86, sq_conflict_resolution: 86 },
+  { name: 'Tanmay Bose',    roll: '12', iq_total: 97,  eq_total: 100, sq_total: 98,  iq_logic: 98, iq_memory: 96, iq_attention: 97, iq_processing_speed: 96, eq_empathy: 102, eq_communication: 99, eq_emotional_balance: 100, eq_confidence: 101, eq_self_awareness: 99, sq_cooperation: 99, sq_leadership: 96, sq_social_awareness: 99, sq_conflict_resolution: 98 },
+];
+
+// ── Logout ──
+function logOut() {
+  localStorage.removeItem('bhava_jwt');
+  jwtToken = '';
+  teacherProfile = null;
+  if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  const nameEl = document.getElementById('teacherName');
+  if (nameEl) nameEl.textContent = '';
+  setConnected(false);
+  showSetup();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+(function init() {
+  // Privacy banner
+  if (localStorage.getItem('bhava_dismissed_notice') === '1') {
+    document.getElementById('privacyBanner').classList.add('hidden');
+  }
+  // Start dashboard (checks JWT, redirects to login if missing)
+  initDashboard();
+})();
+</script>
+</body>
+</html>
