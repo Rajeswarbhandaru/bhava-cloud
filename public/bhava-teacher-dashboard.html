@@ -538,7 +538,84 @@
       font-size: 0.88rem;
     }
     .no-data-icon { font-size: 2rem; margin-bottom: 10px; }
-  </style>
+  
+    /* ─── Capacity Section ─── */
+    .cap-class-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 700px) { .cap-class-grid { grid-template-columns: repeat(2,1fr); } }
+
+    .cap-class-card {
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid var(--gray-border);
+      background: var(--card-bg);
+    }
+    .cap-class-label {
+      font-size: 0.78rem; font-weight: 700;
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .cap-class-bar-wrap {
+      background: var(--gray-border); border-radius: 4px; height: 7px;
+      overflow: hidden; margin-bottom: 5px;
+    }
+    .cap-class-bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.22,1,.36,1); }
+    .cap-class-meta {
+      display: flex; justify-content: space-between;
+      font-size: 0.72rem; color: var(--gray-muted);
+    }
+    .cap-weak-badge {
+      display: inline-block; font-size: 0.65rem; font-weight: 800;
+      padding: 2px 7px; border-radius: 10px;
+      background: #fde8e8; color: #c0392b; margin-left: 6px;
+    }
+    .cap-chart-wrap {
+      background: var(--card-bg); border: 1px solid var(--gray-border);
+      border-radius: 10px; padding: 16px 18px; margin-bottom: 16px;
+    }
+    .cap-chart-title {
+      font-size: 0.82rem; font-weight: 700; color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    /* Capacity mini-bars on student cards */
+    .cap-mini-row {
+      margin-top: 8px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .cap-mini-item {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .cap-mini-label { width: 72px; font-size: 0.68rem; color: var(--gray-muted); flex-shrink: 0; }
+    .cap-mini-bar-wrap {
+      flex: 1; background: var(--gray-border); border-radius: 3px; height: 5px; overflow: hidden;
+    }
+    .cap-mini-bar-fill { height: 100%; border-radius: 3px; }
+    .cap-mini-score { width: 28px; font-size: 0.68rem; font-weight: 700; text-align: right; flex-shrink: 0; }
+
+    /* Capacity focus accordion items */
+    .cap-focus-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--gray-border);
+    }
+    .cap-focus-item:last-child { border-bottom: none; }
+    .cap-focus-rank {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--gray-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.68rem; font-weight: 800; color: var(--gray-muted);
+      flex-shrink: 0;
+    }
+    .cap-focus-name { font-size: 0.85rem; font-weight: 600; flex: 1; }
+    .cap-focus-score { font-size: 0.78rem; color: var(--gray-muted); }
+    .cap-focus-level { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+
+    </style>
 </head>
 <body>
 
@@ -647,6 +724,38 @@
         <div class="chart-canvas-wrap"><canvas id="sqChart"></canvas></div>
       </div>
     </div>
+
+    <!-- ══ CAPACITY PROFILE SECTION ══════════════════════════════════════ -->
+    <div class="section-header" style="margin-top:8px">
+      <h2>🧩 Capacity Profile</h2>
+      <span class="section-badge">Class Average · Focus · Attention · Memory · Imagination · Creativity · Self-Awareness</span>
+    </div>
+
+    <!-- Class average capacity cards -->
+    <div class="cap-class-grid" id="capClassGrid">
+      <div class="cap-class-card"><div class="cap-class-label" style="color:#d97706">🕯️ Focus</div><div class="skeleton" style="height:7px;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:60%"></div></div>
+      <div class="cap-class-card"><div class="cap-class-label" style="color:#059669">👁️ Attention</div><div class="skeleton" style="height:7px;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:60%"></div></div>
+      <div class="cap-class-card"><div class="cap-class-label" style="color:#7c3aed">🧠 Memory</div><div class="skeleton" style="height:7px;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:60%"></div></div>
+      <div class="cap-class-card"><div class="cap-class-label" style="color:#be185d">🌸 Imagination</div><div class="skeleton" style="height:7px;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:60%"></div></div>
+      <div class="cap-class-card"><div class="cap-class-label" style="color:#16a34a">🎨 Creativity</div><div class="skeleton" style="height:7px;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:60%"></div></div>
+      <div class="cap-class-card"><div class="cap-class-label" style="color:#0369a1">🪞 Self-Awareness</div><div class="skeleton" style="height:7px;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:60%"></div></div>
+    </div>
+
+    <!-- Capacity bar chart -->
+    <div class="cap-chart-wrap">
+      <div class="cap-chart-title">Class Capacity Overview — Average Scores</div>
+      <div style="position:relative;height:180px"><canvas id="capChart"></canvas></div>
+    </div>
+
+    <!-- Capacity Focus List -->
+    <div class="section-header" style="margin-top:4px">
+      <h2>🎯 Capacity Focus List</h2>
+      <span class="section-badge">Students needing attention per capacity</span>
+    </div>
+    <div id="capFocusContainer">
+      <div class="loading-spinner"><div class="spinner-ring"></div></div>
+    </div>
+
 
     <!-- 3. Student Cards -->
     <div class="section-header">
@@ -1173,6 +1282,25 @@ function studentCardHTML(s) {
     </div>`;
 }
 
+// ── Capacity mini-bars for student card (called after renderCapacitySection) ──
+function appendCapMiniBar(s) {
+  const roll = s.roll_no || s.id;
+  const scores = window._capScoresByRoll && window._capScoresByRoll[roll];
+  if (!scores) return '';
+  const available = CAP_DEFS_DASH.filter(d => scores[d.key] != null);
+  if (!available.length) return '';
+  return `<div class="cap-mini-row">` +
+    available.map(def => {
+      const sc  = scores[def.key];
+      const pct = Math.round(((sc - 60) / 100) * 100);
+      return `<div class="cap-mini-item">
+        <div class="cap-mini-label">${def.label.replace(/^[^ ]+ /, '')}</div>
+        <div class="cap-mini-bar-wrap"><div class="cap-mini-bar-fill" style="background:${def.color};width:${pct}%"></div></div>
+        <div class="cap-mini-score" style="color:${def.color}">${sc}</div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
 // ── Focus List ──
 function renderFocusList(students) {
   const domains = [
@@ -1344,6 +1472,230 @@ function logOut() {
   // Start dashboard (checks JWT, redirects to login if missing)
   initDashboard();
 })();
+
+/* ═══════════════════════════════════════════════════════
+   CAPACITY MAP (mirrors main.js CAPACITY_MAP)
+═══════════════════════════════════════════════════════ */
+const CAPACITY_MAP_DASH = {
+  'Memory Match Puzzle':        {focus:20,attention:30,memory:50,imagination:0, creativity:0, awareness:0},
+  'Memory Match Ultimate':      {focus:25,attention:25,memory:50,imagination:0, creativity:0, awareness:0},
+  'Memory Zoo Puzzle':          {focus:15,attention:30,memory:55,imagination:0, creativity:0, awareness:0},
+  'NeuroFlash Memory':          {focus:30,attention:30,memory:40,imagination:0, creativity:0, awareness:0},
+  'Neuro Flash Memory':         {focus:30,attention:30,memory:40,imagination:0, creativity:0, awareness:0},
+  'Brain Garden':               {focus:25,attention:35,memory:40,imagination:0, creativity:0, awareness:0},
+  'Logic Grid Puzzle':          {focus:40,attention:30,memory:10,imagination:0, creativity:20,awareness:0},
+  'Logic':                      {focus:45,attention:30,memory:0, imagination:0, creativity:25,awareness:0},
+  'Logic King':                 {focus:45,attention:30,memory:0, imagination:0, creativity:25,awareness:0},
+  'Focus Under Distraction':    {focus:55,attention:35,memory:0, imagination:0, creativity:0, awareness:10},
+  'MindScape Pro':              {focus:45,attention:25,memory:20,imagination:0, creativity:10,awareness:0},
+  'MindSpark IQ':               {focus:45,attention:30,memory:10,imagination:0, creativity:15,awareness:0},
+  'IQ Test Level 3':            {focus:45,attention:30,memory:10,imagination:0, creativity:15,awareness:0},
+  'Bhaava Brain Quest':         {focus:40,attention:25,memory:20,imagination:0, creativity:15,awareness:0},
+  'NeuroSpark':                 {focus:35,attention:35,memory:20,imagination:0, creativity:10,awareness:0},
+  'Neuro-Ascend IQ':            {focus:30,attention:30,memory:30,imagination:0, creativity:10,awareness:0},
+  'Neuro Ascend IQ':            {focus:30,attention:30,memory:30,imagination:0, creativity:10,awareness:0},
+  'Visual Difference Detector': {focus:30,attention:50,memory:20,imagination:0, creativity:0, awareness:0},
+  'Mental Rotation':            {focus:25,attention:35,memory:0, imagination:40,creativity:0, awareness:0},
+  'Grammar Galaxy':             {focus:25,attention:45,memory:30,imagination:0, creativity:0, awareness:0},
+  'Grammar Pro':                {focus:30,attention:40,memory:30,imagination:0, creativity:0, awareness:0},
+  'Telugu Script Game':         {focus:30,attention:40,memory:30,imagination:0, creativity:0, awareness:0},
+  'Devanagari Game':            {focus:30,attention:40,memory:30,imagination:0, creativity:0, awareness:0},
+  'Math Blitz':                 {focus:40,attention:35,memory:10,imagination:0, creativity:15,awareness:0},
+  'Number Garden Quest':        {focus:40,attention:30,memory:15,imagination:0, creativity:15,awareness:0},
+  'Percentile Game':            {focus:40,attention:30,memory:15,imagination:0, creativity:15,awareness:0},
+  'Imaginia Quest':             {focus:20,attention:25,memory:15,imagination:25,creativity:15,awareness:0},
+  'Planet Guardians':           {focus:20,attention:25,memory:10,imagination:25,creativity:20,awareness:0},
+  'Day Super Hero':             {focus:15,attention:20,memory:0, imagination:30,creativity:0, awareness:35},
+  'Empathy Quest':              {focus:10,attention:25,memory:0, imagination:20,creativity:0, awareness:45},
+  'Empathical Conversation':    {focus:10,attention:20,memory:0, imagination:25,creativity:0, awareness:45},
+  'Heart Heroes':               {focus:10,attention:20,memory:0, imagination:20,creativity:0, awareness:50},
+  'Day Hero':                   {focus:15,attention:20,memory:0, imagination:25,creativity:0, awareness:40},
+  'Good Habits':                {focus:20,attention:20,memory:0, imagination:0, creativity:0, awareness:60},
+  'Calm Zone':                  {focus:10,attention:15,memory:0, imagination:10,creativity:0, awareness:65},
+};
+
+const CAP_DEFS_DASH = [
+  { key:'focus',       label:'🕯️ Focus',        color:'#d97706' },
+  { key:'attention',   label:'👁️ Attention',     color:'#059669' },
+  { key:'memory',      label:'🧠 Memory',        color:'#7c3aed' },
+  { key:'imagination', label:'🌸 Imagination',   color:'#be185d' },
+  { key:'creativity',  label:'🎨 Creativity',    color:'#16a34a' },
+  { key:'awareness',   label:'🪞 Self-Awareness', color:'#0369a1' },
+];
+
+function scaleToIQDash(raw) { return Math.round(60 + (raw / 100) * 100); }
+
+// Compute capacity scores for one student from their session list
+// sessions = array of { game_name, raw_score }
+function computeCapacityScores(sessions) {
+  const totals = {focus:0,attention:0,memory:0,imagination:0,creativity:0,awareness:0};
+  const counts = {focus:0,attention:0,memory:0,imagination:0,creativity:0,awareness:0};
+  for (const s of (sessions || [])) {
+    const w = CAPACITY_MAP_DASH[s.game_name];
+    if (!w) continue;
+    const score = Math.min(100, Math.max(0, s.raw_score || 0));
+    for (const cap of Object.keys(totals)) {
+      if (w[cap] > 0) {
+        totals[cap] += score * (w[cap] / 100);
+        counts[cap] += (w[cap] / 100);
+      }
+    }
+  }
+  const result = {};
+  for (const cap of Object.keys(totals)) {
+    result[cap] = counts[cap] > 0 ? scaleToIQDash(totals[cap] / counts[cap]) : null;
+  }
+  return result;
+}
+
+// Students from the API already have aggregated scores (iq_total etc.)
+// For capacity, we derive from the sub-score fields that ARE available
+// using a mapping from IQ/EQ/SQ sub-scores to capacities
+function deriveCapacityFromSubScores(s) {
+  // If student has raw game sessions attached, use those
+  if (s.sessions && s.sessions.length) return computeCapacityScores(s.sessions);
+
+  // Otherwise derive from IQ/EQ sub-scores (approximate)
+  const focus      = avg([s.iq_logic, s.iq_processing_speed, s.iq_attention].filter(v=>v!=null)) || null;
+  const attention  = avg([s.iq_attention, s.eq_empathy].filter(v=>v!=null)) || null;
+  const memory     = s.iq_memory || null;
+  const imagination= avg([s.eq_confidence, s.eq_emotional_balance].filter(v=>v!=null)) || null;
+  const creativity = avg([s.iq_logic, s.sq_leadership].filter(v=>v!=null)) || null;
+  const awareness  = avg([s.eq_self_awareness, s.eq_empathy, s.sq_social_awareness].filter(v=>v!=null)) || null;
+
+  return { focus, attention, memory, imagination, creativity, awareness };
+}
+
+/* ── renderCapacitySection ── */
+function renderCapacitySection(students) {
+  const validStudents = students.filter(s => s.iq_total || s.eq_total || s.sq_total);
+
+  // Compute capacity scores per student
+  const capScores = validStudents.map(s => ({
+    name: s.name, roll: s.roll_no || s.id,
+    scores: deriveCapacityFromSubScores(s)
+  }));
+
+  // Class averages
+  const classAvg = {};
+  for (const def of CAP_DEFS_DASH) {
+    const vals = capScores.map(cs => cs.scores[def.key]).filter(v => v != null);
+    classAvg[def.key] = vals.length ? Math.round(avg(vals)) : null;
+  }
+
+  // ── 1. Class average cards ─────────────────────────────────────────────
+  const grid = document.getElementById('capClassGrid');
+  if (grid) {
+    grid.innerHTML = CAP_DEFS_DASH.map(def => {
+      const score = classAvg[def.key];
+      const pct   = score ? Math.round(((score - 60) / 100) * 100) : 0;
+      const lvl   = score ? getLevel(score).label : 'No data';
+      const isWeak = score && score < 95;
+      return `
+        <div class="cap-class-card">
+          <div class="cap-class-label" style="color:${def.color}">
+            ${def.label}
+            ${isWeak ? '<span class="cap-weak-badge">Needs Attention</span>' : ''}
+          </div>
+          <div class="cap-class-bar-wrap">
+            <div class="cap-class-bar-fill" style="background:${def.color};width:${pct}%"></div>
+          </div>
+          <div class="cap-class-meta">
+            <span>${score || '—'}</span>
+            <span>${lvl}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── 2. Capacity bar chart ──────────────────────────────────────────────
+  const labels = CAP_DEFS_DASH.map(d => d.label.replace(/^[^ ]+ /, ''));
+  const data   = CAP_DEFS_DASH.map(d => classAvg[d.key] || 0);
+  const colors = CAP_DEFS_DASH.map(d => d.color);
+
+  if (chartInstances['capChart']) {
+    chartInstances['capChart'].destroy();
+    delete chartInstances['capChart'];
+  }
+  const capCtx = document.getElementById('capChart');
+  if (capCtx) {
+    chartInstances['capChart'] = new Chart(capCtx.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors.map(c => c + '33'),
+          borderColor: colors,
+          borderWidth: 1.5,
+          borderRadius: 5,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 800, easing: 'easeInOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} — ${getLevel(ctx.parsed.x).label}` } }
+        },
+        scales: {
+          x: { min:60, max:160, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{family:'Poppins',size:10},color:'#7a8f97'} },
+          y: { grid:{display:false}, ticks:{font:{family:'Poppins',size:10},color:'#5a7079'} }
+        }
+      }
+    });
+  }
+
+  // ── 3. Capacity Focus List ─────────────────────────────────────────────
+  const focusEl = document.getElementById('capFocusContainer');
+  if (!focusEl) return;
+
+  if (!capScores.length) {
+    focusEl.innerHTML = '<div class="no-data"><div class="no-data-icon">🧩</div><strong>No capacity data yet.</strong><br>Students need to complete more sessions.</div>';
+    return;
+  }
+
+  const focusHTML = CAP_DEFS_DASH.map((def, i) => {
+    const focused = capScores
+      .filter(cs => cs.scores[def.key] != null && cs.scores[def.key] < 95)
+      .sort((a, b) => a.scores[def.key] - b.scores[def.key]);
+
+    const bodyHTML = focused.length === 0
+      ? `<div class="focus-empty">✓ All students are at Developing Well or above in ${def.label.replace(/^[^ ]+ /, '')}.</div>`
+      : focused.map((cs, idx) => {
+          const score = cs.scores[def.key];
+          const lvl   = getLevel(score);
+          return `
+            <div class="cap-focus-item">
+              <div class="cap-focus-rank">${idx+1}</div>
+              <div class="cap-focus-name">${escapeHTML(cs.name)}</div>
+              <div class="cap-focus-score">${score}</div>
+              <span class="cap-focus-level level-badge level-${lvl.cls}">${lvl.label}</span>
+            </div>`;
+        }).join('');
+
+    return `
+      <div class="focus-section">
+        <button class="focus-toggle" onclick="toggleFocus(this)" aria-expanded="${i===0}">
+          <div class="focus-toggle-left">
+            <span>${def.label}</span>
+            <span class="focus-count">${focused.length}</span>
+          </div>
+          <span class="focus-chevron">▾</span>
+        </button>
+        <div class="focus-body ${i===0?'':'collapsed'}">${bodyHTML}</div>
+      </div>`;
+  }).join('');
+
+  focusEl.innerHTML = focusHTML;
+
+  // ── 4. Add mini capacity bars to student cards ──────────────────────────
+  // Done inline in studentCardHTML — students need capScores stored
+  window._capScoresByRoll = {};
+  capScores.forEach(cs => { window._capScoresByRoll[cs.roll] = cs.scores; });
+}
+
 </script>
 </body>
 </html>
