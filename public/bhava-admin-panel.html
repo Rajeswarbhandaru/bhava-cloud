@@ -210,6 +210,16 @@
     letter-spacing: 0.05em;
   }
 
+  /* ── Visitor log ── */
+  .vlog-row td { font-size: 0.83rem; }
+  .device-chip {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 4px; font-size: 0.72rem; font-weight: 700;
+    background: #eef3ff; color: #3B5BDB;
+  }
+  .vis-name { font-weight: 600; }
+  .vis-email { font-size: 0.78rem; color: var(--muted); }
+
   /* ── Sync log ── */
   .log-row td { font-size: 0.83rem; }
   .log-type {
@@ -255,6 +265,7 @@
       <button class="tab-btn active" onclick="showTab('schools')">Schools</button>
       <button class="tab-btn" onclick="showTab('teachers')">Teachers</button>
       <button class="tab-btn" onclick="showTab('synclog')">Sync Log</button>
+      <button class="tab-btn" onclick="showTab('visitors')">Visitors</button>
     </div>
 
     <!-- ══ Schools Tab ══ -->
@@ -378,6 +389,34 @@
       </div>
     </div>
 
+    <!-- ══ Visitors Tab ══ -->
+    <div class="tab-panel" id="tab-visitors">
+      <div class="card">
+        <h3>Website Visitors (last 200 logins via Google)</h3>
+        <button class="refresh-btn" onclick="loadVisitors()">↻ Refresh</button>
+        <div id="visitor-stats" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px;"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name / Email</th>
+                <th>Device</th>
+                <th>Browser</th>
+                <th>OS</th>
+                <th>City</th>
+                <th>Country</th>
+                <th>Visited At</th>
+              </tr>
+            </thead>
+            <tbody id="visitorsBody">
+              <tr class="empty-row"><td colspan="8">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ Sync Log Tab ══ -->
     <div class="tab-panel" id="tab-synclog">
       <div class="card">
@@ -470,6 +509,7 @@ function showTab(name) {
       b.classList.add('active');
   });
   if (name === 'synclog') loadSyncLog();
+  if (name === 'visitors') loadVisitors();
 }
 
 // ══ School ID generator ═══════════════════════════════════════════════════════
@@ -619,6 +659,52 @@ async function deactivateTeacher(id, name) {
     loadTeachers();
   } catch (e) {
     alert('Error removing teacher.');
+  }
+}
+
+// ══ Visitors ═════════════════════════════════════════════════════════════════
+async function loadVisitors() {
+  const tbody = document.getElementById('visitorsBody');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Loading…</td></tr>';
+  try {
+    const rows = await api('GET', '/track/visitors');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No visitors yet.</td></tr>';
+      return;
+    }
+
+    // Quick stats
+    const deviceCounts = {};
+    rows.forEach(r => { deviceCounts[r.device||'unknown'] = (deviceCounts[r.device||'unknown']||0)+1; });
+    const statsEl = document.getElementById('visitor-stats');
+    statsEl.innerHTML = Object.entries(deviceCounts).map(([d,c]) =>
+      `<div style="background:#eef6f8;border-radius:8px;padding:10px 18px;">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--teal)">${c}</div>
+        <div style="font-size:0.75rem;color:var(--muted);text-transform:capitalize">${d}</div>
+       </div>`
+    ).join('') +
+    `<div style="background:#fff9db;border-radius:8px;padding:10px 18px;">
+      <div style="font-size:1.4rem;font-weight:800;color:#E67700">${rows.length}</div>
+      <div style="font-size:0.75rem;color:var(--muted)">Total</div>
+     </div>`;
+
+    tbody.innerHTML = rows.map((r, i) => `
+      <tr class="vlog-row">
+        <td style="color:var(--muted);font-size:0.78rem">${i+1}</td>
+        <td>
+          <div class="vis-name">${r.name || '—'}</div>
+          <div class="vis-email">${r.email || ''}</div>
+        </td>
+        <td><span class="device-chip">${r.device || '—'}</span></td>
+        <td style="font-size:0.82rem">${r.browser || '—'}</td>
+        <td style="font-size:0.82rem">${r.os || '—'}</td>
+        <td style="font-size:0.82rem">${r.city || '—'}</td>
+        <td style="font-size:0.82rem">${r.country || '—'}</td>
+        <td style="color:var(--muted);font-size:0.78rem">${fmtDate(r.visited_at)}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Error loading visitors.</td></tr>';
   }
 }
 
